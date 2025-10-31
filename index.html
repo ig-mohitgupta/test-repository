@@ -1,0 +1,2019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Special Surprise...</title>
+    <!-- 1. We're loading Tailwind CSS to make everything look cute and modern -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. We're loading some cute fonts from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <!-- NEW: Add the Noto Color Emoji font link -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+    
+    <!-- 3. This configures Tailwind to use our new fonts -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        /* MODIFIED: Added "Noto Color Emoji" as the fallback for sans-serif text.
+                           This will make all emojis 🎵🎂🎉 use the Android style. */
+                        'sans': ['Poppins', '"Noto Color Emoji"', 'sans-serif'],
+                        /* MODIFIED: Also added it to the display font */
+                        'display': ['Dancing Script', '"Noto Color Emoji"', 'cursive'],
+                        /* MODIFIED: Moved Noto to the front here too for the .font-emoji class */
+                        'emoji': ['"Noto Color Emoji"', '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 1s ease-out',
+                        'shake': 'shake 0.5s ease-in-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '25%': { transform: 'translateX(-10px)' },
+                            '50%': { transform: 'translateX(10px)' },
+                            '75%': { transform: 'translateX(-10px)' },
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+  <!-- GSAP for smooth animations used by fireworks (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <!-- 4. This is for our custom styles and animations -->
+    <style>
+        /* --- START: NEW HEIGHT VARIABLE --- */
+        :root {
+            /* Aap is value (700px) ko change karke cake container ki height adjust kar sakte hain */
+            --cake-container-height: 700px; 
+        }
+        /* --- END: NEW HEIGHT VARIABLE --- */
+        
+        /* A soft, animated gradient background for the whole site */
+        body {
+            background: linear-gradient(-45deg, #fbc2eb, #a6c1ee, #fbc2eb, #a6c1ee);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            /* --- CRITICAL STEP: Added from your instructions --- */
+            cursor: none;
+            overflow-x: hidden; 
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Helper class to apply the fade-in animation */
+        .animate-fade-in {
+            animation: fadeIn 1s ease-out;
+        }
+        
+        /* Helper class to apply the shake animation */
+        .animate-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* DYNAMIC SCROLLING ANIMATION (FIXED) */
+        @keyframes scrollLyrics {
+            0% { transform: translateY(100vh); }
+            100% { transform: translateY(-100%); }
+        }
+
+        /* This class will be added by JS to start the scroll. The duration
+           is set dynamically in JavaScript (e.g. element.style.animationDuration = '120s'). */
+        .animate-scroll-lyrics {
+            animation-name: scrollLyrics;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+            /* animation-duration is intentionally left to be set by JS */
+        }
+
+
+        /* LYRIC HIGHLIGHTING STYLES */
+        #lyrics-scroller .lyric-line {
+            transition: all 0.3s ease-in-out;
+        }
+        #lyrics-scroller .lyric-line.active {
+            color: #FFFFFF;
+            opacity: 1.0;
+            font-weight: 600;
+            transform: scale(1.05);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+        }
+
+        /* --- START: NEW CAKE CSS --- */
+        /* ... (existing cake styles, no changes) ... */
+
+        .svg {
+          position: absolute;
+          width: 0;
+          height: 0;
+        }
+
+        #cake-container .plate {
+          position: relative;
+          width: 375px; /* Was 250px */
+          height: 112.5px; /* Was 75px */
+          background: #f1f1f1;
+          margin-top: 0;
+          border-radius: 50%;
+          box-shadow: 0px 3px 5px 0px #aaa;
+          display: grid;
+          place-items: center;
+        }
+
+        #cake-container .cake-wrap {
+          position: absolute;
+          bottom: 50%;
+        }
+
+        #cake-container .cake-base {
+          position: relative;
+          width: 300px; /* Was 200px */
+          height: 75px; /* Was 50px */
+          background: rgb(197,165,192);
+        }
+
+        #cake-container .base-front {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          background: inherit;
+        }
+
+        #cake-container .base-front:after {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 100%;
+          width: 100%;
+          height: 67.5px; /* Was 45px */
+          transform: translatey(-50%);
+          background: inherit;
+          border-radius: 50%;
+        }
+
+        #cake-container .base-top {
+          position: absolute;
+          width: 100%;
+          height: 97.5px; /* Was 65px */
+          top: 0;
+          transform: translatey(-50%);
+          border-radius: 50%;
+          background: inherit;
+        }
+
+        #cake-container .base-top:before {
+          content: '';
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          clip-path: polygon(0 0, 0% 50%, 100% 50%, 100% 0);
+        }
+
+        #cake-container .base-top:after {
+          content: '';
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          border-bottom-color: black;
+          clip-path: polygon(0 50%, 60% 50%, 60% 101%, 0 101%);
+        }
+
+        #cake-container .cake-topping {
+          position: absolute;
+          bottom: 0%;
+          width: 300px; /* Was 200px */
+          height: 150px; /* Was 100px */
+          z-index: 99;
+          animation: toppingFall 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0s forwards;
+          transform: translateY(-225px); /* Was -150px */
+        }
+
+        @keyframes toppingFall {
+          0% {
+            transform: translateY(-225px); /* Was -150px */
+          }
+          80% {
+            transform: translateY(10px);
+          }
+          90% {
+            transform: translateY(-5px);
+          }
+          100% {
+            transform: translateY(0);
+          }
+        }
+
+        #cake-container .topping-front {
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(to bottom, #b381ae 40%, transparent);
+        }
+
+        #cake-container .top-layer {
+          height: 30%;
+          background: #b381ae;
+        }
+
+        #cake-container .bottom-layer {
+          position: relative;
+          height: 70%;
+          background: #b381ae;
+          clip-path: url(#my-clip-path);
+        }
+
+        #cake-container .topping-top {
+          background: #a97aa4;
+          position: absolute;
+          width: 100%;
+          height: 97.5px; /* Was 65px */
+          top: 0;
+          transform: translatey(-50%);
+          border-radius: 50%;
+          z-index: 9;
+        }
+
+        #cake-container .topping-top:before {
+          content: '';
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          clip-path: polygon(0 0, 0% 50%, 100% 50%, 100% 0);
+        }
+
+        #cake-container .topping-top:after {
+          content: '';
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+        }
+
+        #cake-container .candle-container {
+          width: 300px; /* Was 200px */
+          position: absolute;
+          bottom: 60%;
+          z-index: 9999;
+          display: grid;
+          place-items: center;
+          opacity: 0;
+          /* animation: candleAppear 0.4s ease-out 1.9s forwards; -- Removed, triggered by JS */
+        }
+        
+        /* Added .lit class to be triggered by JS */
+        #cake-container .candle-container.lit {
+            animation: candleAppear 0.4s ease-out 0.5s forwards;
+        }
+
+        @keyframes candleAppear {
+          to {
+            opacity: 1;
+          }
+        }
+
+        #cake-container .candle-wrap {
+          position: relative;
+          width: 22.5px; /* Was 15px */
+        }
+
+        #cake-container .flame-wrap {
+          position: relative;
+          z-index: 99;
+          width: 100%;
+          background: #fcc56c;
+          height: 45px; /* Was 30px */
+          transform-origin: bottom center;
+          transform: scale(0);
+          clip-path: url(#my-flame-path);
+          /* animation: flameGrow 0.4s ease-out 2.4s forwards, flameFlicker 1s ease-in-out 2.9s infinite; -- Removed, triggered by JS */
+        }
+
+        /* Added .lit class to be triggered by JS */
+        #cake-container .flame-wrap.lit {
+            animation: flameGrow 0.4s ease-out 1s forwards, flameFlicker 1s ease-in-out 1.5s infinite;
+        }
+
+        @keyframes flameGrow {
+          to {
+            transform: scale(1);
+          }
+        }
+
+        @keyframes flameFlicker {
+          0%, 100% {
+            transform: scale(1) rotate(0deg);
+          }
+          25% {
+            transform: scale(1.1) rotate(-2deg);
+          }
+          50% {
+            transform: scale(0.95) rotate(2deg);
+          }
+          75% {
+            transform: scale(1.05) rotate(-1deg);
+          }
+        }
+
+        #cake-container .candle-top {
+          position: absolute;
+          top: 0;
+          left: 0;
+          transform: translatey(-50%);
+          width: 100%;
+          height: 12px; /* Was 8px */
+          background: white;
+          border-radius: 50%;
+          z-index: 9;
+          background: radial-gradient(#eee, #f0abf0);
+        }
+
+        #cake-container .candle-base {
+          position: relative;
+          width: 100%;
+          height: 112.5px; /* Was 75px */
+          margin: 2px 0;
+          background: repeating-linear-gradient(45deg, #eee, #f0abf0 20%);
+        }
+
+        #cake-container .candle-base:before {
+          content: '';
+          position: absolute;
+          left: 0;
+          bottom: 0;
+          background: #eee;
+          transform: translateY(50%);
+          height: 7.5px; /* Was 5px */
+          width: 100%;
+          z-index: -1;
+          border-radius: 50%;
+        }
+
+        #cake-container .candle-base:after {
+          content: '';
+          position: absolute;
+          left: 50%;
+          bottom: 0;
+          transform: translate(-50%, 50%);
+          height: 15px; /* Was 10px */
+          width: 200%;
+          border-radius: 50%;
+          background: radial-gradient(#9e7199, #b381ae);
+          z-index: -2;
+        }
+
+        #cake-container .star {
+          width: 22.5px; /* Was 15px */
+          height: 22.5px; /* Was 15px */
+          position: absolute;
+          background-color: orange;
+          clip-path: url(#my-star-path);
+          opacity: 0;
+          /* animation: starTwinkle 0.4s ease-out 2.9s forwards, starFloat 2s ease-in-out 3.4s infinite; -- Removed, triggered by JS */
+        }
+        
+        /* Added .lit class to be triggered by JS */
+        #cake-container .star.lit {
+            animation: starTwinkle 0.4s ease-out 1.5s forwards, starFloat 2s ease-in-out 2s infinite;
+        }
+
+        #cake-container .star.lit:nth-of-type(1) {
+          top: -20%;
+          left: 30%;
+          animation-delay: 1.5s, 2s;
+        }
+
+        #cake-container .star.lit:nth-of-type(2) {
+          top: 30%;
+          left: 10%;
+          animation-delay: 1.6s, 2.1s;
+        }
+
+        #cake-container .star.lit:nth-of-type(3) {
+          top: -10%;
+          left: 85%;
+          animation-delay: 1.7s, 2.2s;
+        }
+
+        #cake-container .star.lit:nth-of-type(4) {
+          top: 35%;
+          left: 65%;
+          animation-delay: 1.8s, 2.3s;
+        }
+
+        #cake-container .star.lit:nth-of-type(5) {
+          top: 55%;
+          left: 90%;
+          animation-delay: 1.9s, 2.4s;
+        }
+
+        @keyframes starTwinkle {
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes starFloat {
+          0%, 100% {
+            transform: translateY(0) scale(1);
+          }
+          50% {
+            transform: translateY(-10px) scale(1.2);
+          }
+        }
+        
+        /* Added new animations for extinguishing the flame and stars */
+        @keyframes flameOut {
+            to { transform: scale(0); opacity: 0; }
+        }
+        @keyframes starOut {
+            to { opacity: 0; transform: translateY(-20px) scale(0.5); }
+        }
+        
+        /* --- START: FIXED CSS RULE --- */
+        /* Replaced invalid @apply rule with plain CSS */
+        .grid-item-media img {
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-md */
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            aspect-ratio: 1 / 1; /* aspect-square */
+        }
+        /* --- END: FIXED CSS RULE --- */
+
+    
+    /* --- START: FAIRY DUST CURSOR CSS (Added from your instructions) --- */
+
+    /* 2. Keyframes for the "Fairy Dust" floaty effect */
+    @keyframes float-away {
+        0% {
+            /* Start centered, full size, full opacity */
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        100% {
+            /* End at a random spot set by JS (var(--x), var(--y))
+               Shrink to nothing, and fade out.
+            */
+            transform: translate(calc(var(--x) - 50%), calc(var(--y) - 50%)) scale(0);
+            opacity: 0;
+        }
+    }
+
+    /* 3. Style for the main cursor dot */
+    #cursor-dot {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 8px;
+        height: 8px;
+        background-color: #ff69b4; /* Cute pink color */
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 10000; /* On top of everything */
+        transition: transform 0.1s linear; /* Smooth follow */
+    }
+
+    /* 4. Style for the emoji particles */
+    .particle {
+        position: fixed; /* Use fixed to position relative to viewport */
+        pointer-events: none;
+        z-index: 9999;
+        font-size: 20px;
+        
+        /* Apply the animation defined above */
+        animation: float-away 1s ease-out forwards;
+    }
+
+    /* --- END: FAIRY DUST CURSOR CSS --- */
+
+    </style>
+</head>
+<body class="font-sans">
+
+    <!-- 
+      LYRICS BACKGROUND
+      ... (existing lyrics background, no changes) ...
+    -->
+    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div id="lyrics-scroller" class="w-full pl-8 md:pl-12 text-left text-pink-900/20 font-display text-4xl">
+            <!-- 
+              This div will be dynamically populated by JavaScript
+              with the lyrics of the currently playing song.
+            -->
+            <div id="lyrics-content" class="py-12 leading-loose">
+                <!-- Lyrics will be injected here -->
+            </div>
+        </div>
+    </div>
+
+  <!-- Fireworks canvas (covers the whole viewport) -->
+  <canvas id="fireworksCanvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+
+    <!-- 
+      MUSIC PLAYER 
+      ... (existing music player, no changes) ...
+    -->
+    <audio id="bg-music" onplay="hidePlayButton();" ontimeupdate="updateLyricHighlight()" onended="playNextSong()" onerror="logAudioError()">
+        <source id="music-source" src="" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- 
+      Manual Play Button (Fallback)
+      ... (existing play button, no changes) ...
+    -->
+    <button id="play-music-button" onclick="manualPlayMusic()" class="fixed top-4 right-4 bg-white/70 backdrop-blur-lg text-pink-600 font-semibold py-2 px-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50">
+        Click to Play Music 🎵
+    </button>
+
+    <!-- 
+      PAGE 1: COUNTDOWN
+      ... (existing countdown page, no changes) ...
+    -->
+    <div id="page-countdown" class="min-h-screen flex items-center justify-center p-6 animate-fade-in relative z-10">
+        <div class="w-full max-w-2xl bg-white/70 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 text-center">
+            <h1 class="font-display text-4xl md:text-6xl text-pink-600 mb-4">A Birthday Surprise is Loading...</h1>
+            <p class="text-lg text-gray-700 mb-8">Get ready! Something special is coming just for you.</p>
+            
+            <div class="flex justify-center gap-2 md:gap-4 mb-8 text-gray-800">
+                <div class="bg-white/50 rounded-lg p-4 w-20 md:w-28 shadow-md">
+                    <div id="timer-days" class="text-4xl md:text-6xl font-bold">00</div>
+                    <div class="text-xs md:text-sm uppercase">Days</div>
+                </div>
+                <div class="bg-white/50 rounded-lg p-4 w-20 md:w-28 shadow-md">
+                    <div id="timer-hours" class="text-4xl md:text-6xl font-bold">00</div>
+                    <div class="text-xs md:text-sm uppercase">Hours</div>
+                </div>
+                <div class="bg-white/50 rounded-lg p-4 w-20 md:w-28 shadow-md">
+                    <div id="timer-minutes" class="text-4xl md:text-6xl font-bold">00</div>
+                    <div class="text-xs md:text-sm uppercase">Minutes</div>
+                </div>
+                <div class="bg-white/50 rounded-lg p-4 w-20 md:w-28 shadow-md">
+                    <div id="timer-seconds" class="text-4xl md:text-6xl font-bold">00</div>
+                    <div class="text-xs md:text-sm uppercase">Seconds</div>
+                </div>
+            </div>
+            
+            <p id="timer-message" class="text-gray-600 mb-8">Please wait until the countdown finishes to continue!</p>
+            
+            <button id="countdown-button" onclick="showLoginPage()" class="w-full md:w-auto bg-pink-500 text-white font-bold py-3 px-10 rounded-full shadow-lg transition-all duration-300 ease-in-out hover:bg-pink-600 hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-pink-500 disabled:hover:scale-100">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <!-- 
+      PAGE 2: LOGIN
+      ... (existing login page, no changes) ...
+    -->
+    <div id="page-login" class="min-h-screen flex items-center justify-center p-6 hidden relative z-10">
+        <div id="login-card" class="w-full max-w-md bg-white/70 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 text-center animate-fade-in">
+            <h1 class="font-display text-4xl md:text-5xl text-purple-600 mb-4">One More Step...</h1>
+            <p class="text-lg text-gray-700 mb-8">Enter the secret password to unlock your surprise!</p>
+            
+            <input type="password" id="password-input" class="w-full text-center text-lg px-6 py-3 rounded-full border-2 border-purple-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Password?">
+            
+            <div id="error-message" class="text-red-500 font-semibold h-6 mt-3 mb-3"></div>
+            
+            <button onclick="checkPassword()" class="w-full bg-purple-500 text-white font-bold py-3 px-10 rounded-full shadow-lg transition-all duration-300 ease-in-out hover:bg-purple-600 hover:shadow-xl transform hover:scale-105">
+                Unlock
+            </button>
+        </div>
+    </div>
+
+    <!-- 
+      PAGE 3: MAIN WISHES (REPLACED)
+    -->
+    <div id="page-main" class="min-h-screen p-6 md:p-12 hidden relative z-10">
+        <div class="max-w-4xl mx-auto animate-fade-in">
+            
+            <!-- Kept this title as requested -->
+            <h1 class="font-display text-6xl md:text-8xl text-center text-pink-600 mb-12">
+                Happy Birthday, [Friend's Name]!
+            </h1>
+
+            <!-- 
+              NEW LAYOUT: Main Content Block with 2-Column Grid
+              This grid repeats the 4-item pattern 10 times.
+            -->
+            <div class="main-content-block">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-12">
+                    
+                    <!-- Set 1: Text, Photo, GIF, Text -->
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Here is some placeholder text for the first message. You can write your own personal note here!"</p>
+                    </div>
+                    <div class="grid-item-media grid-item-photo" onclick="showMessage(1)">
+                        <img src="https://placehold.co/400x400/fbc2eb/333?text=Photo+1" alt="Memory 1">
+                    </div>
+                    <div class="grid-item-media">
+                        <img src="https://placehold.co/400x400/a6c1ee/333?text=GIF+1" alt="GIF 1">
+                    </div>
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"This is the second text block. Lorem ipsum dolor sit amet, consectetur adipiscing elit."</p>
+                    </div>
+                    
+                    <!-- Set 2: Text, Photo, GIF, Text -->
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Third text block. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."</p>
+                    </div>
+                    <div class="grid-item-media grid-item-photo" onclick="showMessage(2)">
+                        <img src="https://placehold.co/400x400/fbc2eb/333?text=Photo+2" alt="Memory 2">
+                    </div>
+                    <div class="grid-item-media">
+                        <img src="https://placehold.co/400x400/a6c1ee/333?text=GIF+2" alt="GIF 2">
+                    </div>
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Fourth text block. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."</p>
+                    </div>
+
+                    <!-- Set 3: Text, Photo, GIF, Text -->
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Fifth text block. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore."</p>
+                    </div>
+                    <div class="grid-item-media grid-item-photo" onclick="showMessage(3)">
+                        <img src="https://placehold.co/400x400/fbc2eb/333?text=Photo+3" alt="Memory 3">
+                    </div>
+                    <div class="grid-item-media">
+                        <img src="https://placehold.co/400x400/a6c1ee/333?text=GIF+3" alt="GIF 3">
+                    </div>
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Sixth text block. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia."</p>
+                    </div>
+
+                    <!-- Set 4: Text, Photo, GIF, Text -->
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Seventh text block. Placeholder text for you to replace with a sweet memory."</p>
+                    </div>
+                    <div class="grid-item-media grid-item-photo" onclick="showMessage(4)">
+                        <img src="https://placehold.co/400x400/fbc2eb/333?text=Photo+4" alt="Memory 4">
+                    </div>
+                    <div class="grid-item-media">
+                        <img src="https://placehold.co/400x400/a6c1ee/333?text=GIF+4" alt="GIF 4">
+                    </div>
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Eighth text block. Another spot for an inside joke or a happy moment you shared."</p>
+                    </div>
+
+                    <!-- Set 5: Text, Photo, GIF, Text -->
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Ninth text block. We're halfway through! Keep adding your lovely messages."</p>
+                    </div>
+                    <div class="grid-item-media grid-item-photo" onclick="showMessage(5)">
+                        <img src="https://placehold.co/400x400/fbc2eb/333?text=Photo+5" alt="Memory 5">
+                    </div>
+                    <div class="grid-item-media">
+                        <img src="https://placehold.co/400x400/a6c1ee/333?text=GIF+5" alt="GIF 5">
+                    </div>
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Tenth text block. This is a great spot to write about a shared dream or adventure."</p>
+                    </div>
+
+                    <!-- Set 6: Text, Photo, GIF, Text -->
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Eleventh text block. Remember that one time...?"</p>
+                    </div>
+                    <div class="grid-item-media grid-item-photo" onclick="showMessage(6)">
+                        <img src="https://placehold.co/400x400/fbc2eb/333?text=Photo+6" alt="Memory 6">
+                    </div>
+                    <div class="grid-item-media">
+                        <img src="https://placehold.co/400x400/a6c1ee/333?text=GIF+6" alt="GIF 6">
+                    </div>
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Twelfth text block. Just some more random text for you to customize."</p>
+                    </div>
+
+                    <!-- Set 7: Text, Photo, GIF, Text -->
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Thirteenth text block. Lorem ipsum dolor sit amet."</p>
+                    </div>
+                    <div class="grid-item-media grid-item-photo" onclick="showMessage(7)">
+                        <img src="https://placehold.co/400x400/fbc2eb/333?text=Photo+7" alt="Memory 7">
+                    </div>
+                    <div class="grid-item-media">
+                        <img src="https://placehold.co/400x400/a6c1ee/333?text=GIF+7" alt="GIF 7">
+                    </div>
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Fourteenth text block. Consectetur adipiscing elit."</p>
+                    </div>
+
+                    <!-- Set 8: Text, Photo, GIF, Text -->
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Fifteenth text block. Sed do eiusmod tempor incididunt."</p>
+                    </div>
+                    <div class="grid-item-media grid-item-photo" onclick="showMessage(8)">
+                        <img src="https://placehold.co/400x400/fbc2eb/333?text=Photo+8" alt="Memory 8">
+                    </div>
+                    <div class="grid-item-media">
+                        <img src="https://placehold.co/400x400/a6c1ee/333?text=GIF+8" alt="GIF 8">
+                    </div>
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Sixteenth text block. Ut labore et dolore magna aliqua."</p>
+                    </div>
+
+                    <!-- Set 9: Text, Photo, GIF, Text -->
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Seventeenth text block. Almost at the end! One last big memory."</p>
+                    </div>
+                    <div class="grid-item-media grid-item-photo" onclick="showMessage(9)">
+                        <img src="https://placehold.co/400x400/fbc2eb/333?text=Photo+9" alt="Memory 9">
+                    </div>
+                    <div class="grid-item-media">
+                        <img src="https://placehold.co/400x400/a6c1ee/333?text=GIF+9" alt="GIF 9">
+                    </div>
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Eighteenth text block. Another spot for a final sweet note before the last set."</p>
+                    </div>
+
+                    <!-- Set 10: Text, Photo, GIF, Text -->
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Nineteenth text block. The final text block on the left side."</p>
+                    </div>
+                    <div class="grid-item-media grid-item-photo" onclick="showMessage(10)">
+                        <img src="https://placehold.co/400x400/fbc2eb/333?text=Photo+10" alt="Memory 10">
+                    </div>
+                    <div class="grid-item-media">
+                        <img src="https://placehold.co/400x400/a6c1ee/333?text=GIF+10" alt="GIF 10">
+                    </div>
+                    <div class="grid-item-text">
+                        <p class="text-lg text-gray-800">"Twentieth text block! You made it. Happy Birthday again to your bestie!"</p>
+                    </div>
+
+                </div>
+                <!-- End of New Layout Grid -->
+            </div>
+            <!-- End of Main Content Block -->
+
+
+            <!-- Section 4: Cake Cutting Button (Kept at the bottom) -->
+            <div class="text-center mb-12">
+                <button onclick="startCakeCutting()" class="bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold py-3 px-8 rounded-full shadow-lg transition-all duration-500 ease-in-out hover:from-pink-600 hover:to-purple-700 hover:shadow-xl transform hover:scale-105 text-lg md:text-xl">
+                    🎂 Now it's cake cutting time... 🎂
+                </button>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- 
+      PAGE 4: CAKE WITH CANDLES
+      ... (existing cake page, no changes) ...
+    -->
+  <!-- MODIFIED: Changed pb-0 to pb-12 to add space at the bottom -->
+  <div id="page-cake" class="min-h-screen flex items-center justify-center pt-6 pb-12 hidden relative z-10">
+  <div class="w-full max-w-4xl bg-white/70 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 text-center animate-fade-in relative"> <!-- Added relative class -->
+            
+            <!-- NEW BACK BUTTON -->
+            <button onclick="goBackToMain()" class="absolute top-4 left-4 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-full shadow-md transition-all duration-300 hover:bg-gray-300 hover:scale-105 z-50">
+                &larr; Back
+            </button>
+            <!-- END NEW BACK BUTTON -->
+            
+            <h1 class="font-display text-4xl md:text-6xl text-pink-600 mb-4">Make a Wish! 🎂</h1>
+            <p class="text-lg text-gray-700 mb-8">Blow into your microphone to blow out the candles!</p>
+            
+            <!-- Microphone Status -->
+            <div id="mic-status" class="text-sm text-gray-600 mb-4">
+                <span id="mic-status-text">Click "Start" to enable microphone</span>
+            </div>
+            
+            <button id="mic-start-button" onclick="initCakePage()" class="bg-pink-500 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all duration-300 hover:bg-pink-600 mb-6">
+                Start
+            </button>
+            
+            <!-- Cake container - NOW CONTAINS THE CAKE HTML -->
+            <!-- MODIFIED: Removed min-h-[800px] and added style with CSS variable -->
+            <div id="cake-container" class="relative mx-auto flex items-center justify-center py-12" style="min-height: var(--cake-container-height);">
+                <!-- HTML from the cake file is injected here -->
+                <div class="plate">
+                  <div class="cake-wrap">
+                    <div class="cake-topping">
+                      <div class="topping-top">
+                        <div class="candle-container">
+                          <div class="star"></div>
+                          <div class="star"></div>
+                          <div class="star"></div>
+                          <div class="star"></div>
+                          <div class="star"></div>
+                          <div class="candle-wrap">
+                            <div class="flame-wrap"></div>
+                            <div class="candle-base">
+                              <div class="candle-top"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="topping-front">
+                        <div class="top-layer"></div>
+                        <div class="bottom-layer"></div>
+                      </div>
+                    </div>
+                    <div class="cake-base">
+                      <div class="base-front"></div>
+                      <div class="base-top"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <svg class="svg">
+                    <clipPath id="my-clip-path" clipPathUnits="objectBoundingBox">
+                      <path d="M0,0 V0.481 s0.021,0.37,0.078,0.404 s0.035,-0.296,0.102,-0.27 s0.007,0.363,0.096,0.354 s0.028,-0.466,0.1,-0.487 S0.406,0.999,0.457,0.999 s0.03,-0.502,0.075,-0.518 s0.041,0.488,0.081,0.274 c0.007,-0.038,0.021,-0.187,0.044,-0.215 c0.014,-0.017,0.038,0.401,0.075,0.392 s0.023,-0.28,0.074,-0.392 c0.022,-0.04,0.072,0.359,0.1,0.344 c0.057,-0.029,0.094,-0.405,0.094,-0.405 V-0.001"></path>
+                    </clipPath>
+                    <clipPath id="my-flame-path" clipPathUnits="objectBoundingBox">
+                      <path d="M0.501,0 s0.188,0.101,0.295,0.238 s0.123,0.15,0.169,0.286 S1,0.74,0.928,0.838 S0.711,1,0.501,1 S0.216,0.937,0.09,0.838 s-0.083,-0.149,0,-0.29 s0.23,-0.139,0.333,-0.276 S0.501,0,0.501,0"></path>
+                    </clipPath>
+                    <clipPath id="my-star-path" clipPathUnits="objectBoundingBox">
+                      <path d="M0.5,0.846 l-0.309,0.154,0.044,-0.357 L0,0.382 l0.336,-0.067 L0.5,0 l0.164,0.315,0.336,0.067,-0.235,0.261,0.044,0.357"></path>
+                    </clipPath>
+                </svg>
+                <!-- End of injected HTML -->
+            </div>
+            
+            <!-- Instructions -->
+            <p id="blow-instructions" class="text-gray-600 mt-8 hidden">
+                💨 Blow into your microphone now!
+            </p>
+        </div>
+    </div>
+
+
+    <!-- 
+      NEW: MESSAGE PAGES (1-10)
+      These are hidden pages that show up when a photo is clicked.
+    -->
+
+    <!-- PAGE MESSAGE 1 -->
+    <div id="page-message-1" class="min-h-screen flex items-center justify-center p-6 hidden relative z-20">
+        <div class="w-full max-w-2xl bg-white/70 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 text-center animate-fade-in relative">
+            <button onclick="hideMessage()" class="absolute top-4 left-4 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-full shadow-md transition-all duration-300 hover:bg-gray-300 hover:scale-105 z-50">
+                &larr; Back
+            </button>
+            <h2 class="font-display text-4xl text-purple-600 mb-4">Message 1</h2>
+            <p class="text-lg text-gray-800 leading-relaxed">
+                This is the special message for Photo 1. You can write a detailed memory, an inside joke, or a heartfelt note here!
+            </p>
+        </div>
+    </div>
+    
+    <!-- PAGE MESSAGE 2 -->
+    <div id="page-message-2" class="min-h-screen flex items-center justify-center p-6 hidden relative z-20">
+        <div class="w-full max-w-2xl bg-white/70 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 text-center animate-fade-in relative">
+            <button onclick="hideMessage()" class="absolute top-4 left-4 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-full shadow-md transition-all duration-300 hover:bg-gray-300 hover:scale-105 z-50">
+                &larr; Back
+            </button>
+            <h2 class="font-display text-4xl text-purple-600 mb-4">Message 2</h2>
+            <p class="text-lg text-gray-800 leading-relaxed">
+                This is the special message for Photo 2. Replace this placeholder with your text.
+            </p>
+        </div>
+    </div>
+    
+    <!-- PAGE MESSAGE 3 -->
+    <div id="page-message-3" class="min-h-screen flex items-center justify-center p-6 hidden relative z-20">
+        <div class="w-full max-w-2xl bg-white/70 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 text-center animate-fade-in relative">
+            <button onclick="hideMessage()" class="absolute top-4 left-4 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-full shadow-md transition-all duration-300 hover:bg-gray-300 hover:scale-105 z-50">
+                &larr; Back
+            </button>
+            <h2 class="font-display text-4xl text-purple-600 mb-4">Message 3</h2>
+            <p class="text-lg text-gray-800 leading-relaxed">
+                This is the special message for Photo 3. Replace this placeholder with your text.
+            </p>
+        </div>
+    </div>
+    
+    <!-- PAGE MESSAGE 4 -->
+    <div id="page-message-4" class="min-h-screen flex items-center justify-center p-6 hidden relative z-20">
+        <div class="w-full max-w-2xl bg-white/70 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 text-center animate-fade-in relative">
+            <button onclick="hideMessage()" class="absolute top-4 left-4 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-full shadow-md transition-all duration-300 hover:bg-gray-300 hover:scale-105 z-50">
+                &larr; Back
+            </button>
+            <h2 class="font-display text-4xl text-purple-600 mb-4">Message 4</h2>
+            <p class="text-lg text-gray-800 leading-relaxed">
+                This is the special message for Photo 4. Replace this placeholder with your text.
+            </p>
+        </div>
+    </div>
+    
+    <!-- PAGE MESSAGE 5 -->
+    <div id="page-message-5" class="min-h-screen flex items-center justify-center p-6 hidden relative z-20">
+        <div class="w-full max-w-2xl bg-white/70 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 text-center animate-fade-in relative">
+            <button onclick="hideMessage()" class="absolute top-4 left-4 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-full shadow-md transition-all duration-300 hover:bg-gray-300 hover:scale-105 z-50">
+                &larr; Back
+            </button>
+            <h2 class="font-display text-4xl text-purple-600 mb-4">Message 5</h2>
+            <p class="text-lg text-gray-800 leading-relaxed">
+                This is the special message for Photo 5. Replace this placeholder with your text.
+            </p>
+        </div>
+    </div>
+    
+    <!-- PAGE MESSAGE 6 -->
+    <div id="page-message-6" class="min-h-screen flex items-center justify-center p-6 hidden relative z-20">
+        <div class="w-full max-w-2xl bg-white/70 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 text-center animate-fade-in relative">
+            <button onclick="hideMessage()" class="absolute top-4 left-4 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-full shadow-md transition-all duration-300 hover:bg-gray-300 hover:scale-105 z-50">
+                &larr; Back
+            </button>
+            <h2 class="font-display text-4xl text-purple-600 mb-4">Message 6</h2>
+            <p class="text-lg text-gray-800 leading-relaxed">
+                This is the special message for Photo 6. Replace this placeholder with your text.
+            </p>
+        </div>
+    </div>
+    
+    <!-- PAGE MESSAGE 7 -->
+    <div id="page-message-7" class="min-h-screen flex items-center justify-center p-6 hidden relative z-20">
+        <div class="w-full max-w-2xl bg-white/70 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 text-center animate-fade-in relative">
+            <button onclick="hideMessage()" class="absolute top-4 left-4 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-full shadow-md transition-all duration-300 hover:bg-gray-300 hover:scale-105 z-50">
+                &larr; Back
+            </button>
+            <h2 class="font-display text-4xl text-purple-600 mb-4">Message 7</h2>
+            <p class="text-lg text-gray-800 leading-relaxed">
+                This is the special message for Photo 7. Replace this placeholder with your text.
+            </p>
+        </div>
+    </div>
+    
+    <!-- PAGE MESSAGE 8 -->
+    <div id="page-message-8" class="min-h-screen flex items-center justify-center p-6 hidden relative z-20">
+        <div class="w-full max-w-2xl bg-white/70 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 text-center animate-fade-in relative">
+            <button onclick="hideMessage()" class="absolute top-4 left-4 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-full shadow-md transition-all duration-300 hover:bg-gray-300 hover:scale-105 z-50">
+                &larr; Back
+            </button>
+            <h2 class="font-display text-4xl text-purple-600 mb-4">Message 8</h2>
+            <p class="text-lg text-gray-800 leading-relaxed">
+                This is the special message for Photo 8. Replace this placeholder with your text.
+            </p>
+        </div>
+    </div>
+    
+    <!-- PAGE MESSAGE 9 -->
+    <div id="page-message-9" class="min-h-screen flex items-center justify-center p-6 hidden relative z-20">
+        <div class="w-full max-w-2xl bg-white/70 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 text-center animate-fade-in relative">
+            <button onclick="hideMessage()" class="absolute top-4 left-4 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-full shadow-md transition-all duration-300 hover:bg-gray-300 hover:scale-105 z-50">
+                &larr; Back
+            </button>
+            <h2 class="font-display text-4xl text-purple-600 mb-4">Message 9</h2>
+            <p class="text-lg text-gray-800 leading-relaxed">
+                This is the special message for Photo 9. Replace this placeholder with your text.
+            </p>
+        </div>
+    </div>
+    
+    <!-- PAGE MESSAGE 10 -->
+    <div id="page-message-10" class="min-h-screen flex items-center justify-center p-6 hidden relative z-20">
+        <div class="w-full max-w-2xl bg-white/70 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 text-center animate-fade-in relative">
+            <button onclick="hideMessage()" class="absolute top-4 left-4 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-full shadow-md transition-all duration-300 hover:bg-gray-300 hover:scale-105 z-50">
+                &larr; Back
+            </button>
+            <h2 class="font-display text-4xl text-purple-600 mb-4">Message 10</h2>
+            <p class="text-lg text-gray-800 leading-relaxed">
+                This is the special message for Photo 10. Replace this placeholder with your text.
+            </p>
+        </div>
+    </div>
+    <!-- END OF NEW MESSAGE PAGES -->
+
+
+    <!-- 
+      JAVASCRIPT LOGIC
+    -->
+    <script>
+        // --- FIX: Moved all variables and functions to the global scope ---
+    
+        // --- TODO: SET YOUR VALUES HERE! ---
+        // ... (existing settings, no changes) ...
+        const birthdayTime = new Date("Oct 25, 2025 00:00:00").getTime();
+        const secretPassword = "sample password"; 
+        
+        // --- End of settings ---
+
+        // Declare variables for page elements in the global scope
+        let pageCountdown, pageLogin, pageMain, pageCake;
+        // NEW: Add variables for all 10 message pages
+        let pageMessage1, pageMessage2, pageMessage3, pageMessage4, pageMessage5;
+        let pageMessage6, pageMessage7, pageMessage8, pageMessage9, pageMessage10;
+        let allMessagePages = []; // We will fill this array later
+        
+        let timerDays, timerHours, timerMinutes, timerSeconds, timerMessage, countdownButton, playMusicButton;
+        let music, musicSource, lyricsScroller, lyricsContent, songListContainer;
+        
+        // ... (existing cake variables, no changes) ...
+        let audioContext, analyser, microphone, stream;
+        let blowDetected = false;
+        
+        // --- NEW: SONGS DATABASE ---
+        // ... (existing songs database, no changes) ...
+        let currentSongIndex = 0;
+        let currentLyricTimestamps = [];
+        
+        const songs = [
+            {
+                title: "Sweet",
+                src: "https://files.catbox.moe/npc9sy.mp3",
+                duration: 235, // 3m 55s
+                lyrics: [
+                    { time: 0.00, text: "Watching the video that you sent me" },
+                    { time: 9.79, text: "The one where you're showering with wet hair dripping" },
+                    { time: 20.15, text: "You know that I'm obsessed with your body" },
+                    { time: 30.15, text: "But it's the way you smile that does it for me" },
+                    { time: 38.87, text: "♪..." },
+                    { time: 40.33, text: "It's so sweet, knowing that you love me" },
+                    { time: 50.66, text: "Though we don't need to say it to each other, sweet" },
+                    { time: 60.39, text: "Knowing that I love you, and running my fingers through your hair" },
+                    { time: 70.55, text: "It's so sweet" },
+                    { time: 74.30, text: "♪..." },
+                    { time: 75.44, text: "Watching the video where you're lying" },
+                    { time: 85.39, text: "In your red lingerie ten times nightly" },
+                    { time: 95.29, text: "You know I think your skin's the perfect color" },
+                    { time: 105.43, text: "But it's always your eyes that pull me under" },
+                    { time: 113.57, text: "♪..." },
+                    { time: 114.4, text: "♪..." },
+                    { time: 115.23, text: "It's so sweet, knowing that you love me" },
+                    { time: 125.23, text: "Though we don't need to say it to each other, sweet" },
+                    { time: 135.21, text: "Knowing that I love you, and running my fingers through your hair" },
+                    { time: 144.85, text: "It's so sweet" },
+                    { time: 149.068, text: "♪...<br>" },
+                    { time: 153.286, text: "♪..." },
+                    { time: 157.504, text: "♪...<br>" },
+                    { time: 161.722, text: "♪..." },
+                    { time: 165.940, text: "♪...<br>" },
+                    { time: 170.16, text: "And I will gladly break it, I will gladly break my heart for you" },
+                    { time: 180.37, text: "And I will gladly break it, I will gladly break my heart for you" },
+                    { time: 189.34, text: "And I will gladly break it, I will gladly break my heart for you" },
+                    { time: 199.68, text: "And I will gladly break it, I will gladly break my heart for you" },
+                    { time: 207.46, text: "♪..." },
+                    { time: 209.00, text: "It's so sweet, knowing that you love me" },
+                    { time: 218.66, text: "Though we don't need to say it to each other, sweet" },
+                    { time: 228.61, text: "Knowing that I love you, and running my fingers through your hair" },
+                    { time: 238.02, text: "It's so sweet" }
+                ]
+            },
+            {
+                title: "Perfect",
+                src: "https://files.catbox.moe/mqkv73.mp3",
+                duration: 275, // 4m 35s
+                lyrics: [
+                    { time: 2.621, text: "I found a love for me <br> ♪" },
+                    { time: 9.835, text: "Darling just dive right in" },
+                    { time: 14.30, text: "And follow my lead" },
+                    { time: 17.485, text: "Well I found a girl beautiful and sweet" },
+                    { time: 24.09, text: "♪" },
+                    { time: 25.170, text: "I never knew you were the someone waiting for me" },
+                    { time: 31.859, text: "'Cause we were just kids when we fell in love" },
+                    { time: 36.699, text: "Not knowing what it was" },
+                    { time: 40.508, text: "I will not give you up this time"},
+                    { time: 47.877, text: "But darling, just kiss me slow," },
+                    { time: 52.30, text: "your heart is all I own" },
+                    { time: 55.597, text: "And in your eyes you're holding mine" },
+                    { time: 61.03, text: "♪" },
+                    { time: 62.149, text: "Baby, I'm dancing in the dark <br> with you between my arms" },
+                    { time: 73.423, text: "Barefoot on the grass," },
+                    { time: 78.06, text: "listening to our favorite song" },
+                    { time: 80.587, text: "When you said you looked a mess," },
+                    { time: 84.90, text: "I whispered underneath my breath" },
+                    { time: 87.494, text: "But you heard it, darling," },
+                    { time: 90.30, text: "Darling you look perfect tonight" },
+                    { time: 95.20, text: "♪" },
+                    { time: 97.50, text: "♪" },
+                    { time: 99.80, text: "♪" },
+                    { time: 101.031, text: "Well I found a woman, <br> stronger than anyone I know" },
+                    { time: 108.507, text: "She shares my dreams," },
+                    { time: 110.50, text: "I hope that someday <br> I'll share her home" },
+                    { time: 116.225, text: "I found a love, to carry more than just my secrets" },
+                    { time: 125.136, text: "To carry love, to carry children of our own" },
+                    { time: 130.531, text: "We are still kids, but we're so in love" },
+                    { time: 135.175, text: "Fighting against all odds" },
+                    { time: 138.960, text: "I know we'll be alright this time" },
+                    { time: 146.481, text: "Darling, just hold my hand" },
+                    { time: 150.126, text: "Be my girl, I'll be your man" },
+                    { time: 154.116, text: "I see my future in your eyes <br> ♪" },
+                    { time: 160.646, text: "Baby, I'm dancing in the dark," },
+                    { time: 168.03, text: "with you between my arms" },
+                    { time: 172.009, text: "Barefoot on the grass," },
+                    { time: 176.05, text: "listening to our favorite song" },
+                    { time: 179.187, text: "When I saw you in that dress, <br> looking so beautiful" },
+                    { time: 185.352, text: "I don't deserve this, darling, <br> you look perfect tonight" },
+                    { time: 193.50, text: "♪" },
+                    { time: 196.50, text: "♪" },
+                    { time: 199.50, text: "♪" },
+                    { time: 202.50, text: "♪" },
+                    { time: 205.50, text: "♪" },
+                    { time: 206.181, text: "Baby, I'm dancing in the dark," },
+                    { time: 210.05, text: "with you between my arms" },
+                    { time: 217.438, text: "Barefoot on the grass, <br> listening to our favorite song" },
+                    { time: 224.663, text: "I have faith in what I see" },
+                    { time: 227.910, text: "Now I know I have met an angel in person" },
+                    { time: 233.50, text: "♪" },
+                    { time: 234.478, text: "And she looks perfect" },
+                    { time: 238.078, text: "I don't deserve this" },
+                    { time: 242.316, text: "You look perfect tonight" },
+                    { time: 247.50, text: "♪" },
+                    { time: 250.50, text: "♪" },
+                    { time: 255.50, text: "♪" },
+                    { time: 258.50, text: "♪" },
+                    { time: 262.50, text: "♪" },
+                ]
+            },
+            {
+                title: "Until I Found You",
+                src: "https://files.catbox.moe/l03kvm.mp3",
+                duration: 178, // 2m 58s
+                lyrics: [
+                    { time: 9.96, text: "Georgia, wrap me up in all your" },
+                    { time: 16.75, text: "I want you in my arms" },
+                    { time: 22.17, text: "Oh, let me hold you" },
+                    { time: 27.29, text: "I'll never let you go again like I did" },
+                    { time: 33.46, text: "Oh, I used to say" },
+                    { time: 36.88, text: "I would never fall in love again until I found her" },
+                    { time: 44.04, text: "I said, \"I would never fall unless it's you I fall into\"" },
+                    { time: 51.08, text: "I was lost within the darkness, but then I found her" },
+                    { time: 57.88, text: "I found you" },
+                    { time: 67.46, text: "Georgia pulled me in, I asked to" },
+                    { time: 73.83, text: "Love her once again" },
+                    { time: 79.12, text: "You fell, I caught you" },
+                    { time: 84.50, text: "I'll never let you go again like I did" },
+                    { time: 90.38, text: "Oh, I used to say" },
+                    { time: 94.00, text: "I would never fall in love again until I found her" },
+                    { time: 101.04, text: "I said, \"I would never fall unless it's you I fall into\"" },
+                    { time: 108.29, text: "I was lost within the darkness, but then I found her" },
+                    { time: 114.96, text: "I found you" },
+                    { time: 120.417, text: "♪" },
+                    { time: 125.874, text: "♪" },
+                    { time: 131.331, text: "♪" },
+                    { time: 136.79, text: "I would never fall in love again until I found her" },
+                    { time: 143.75, text: "I said, \"I would never fall unless it's you I fall into\"" },
+                    { time: 150.96, text: "I was lost within the darkness, but then I found her" },
+                    { time: 157.75, text: "I found you" },
+                    { time: 162.562, text: "♪" },
+                    { time: 167.374, text: "♪" },
+                    { time: 172.186, text: "♪" },
+                ]
+            },
+            {
+                title: "Die For You",
+                src: "https://files.catbox.moe/v7kr07.mp3",
+                duration: 260, // 4m 20s
+                lyrics: [
+                    { time: 0, text: "..." },
+                    { time: 28.90, text: "I'm findin' ways to articulate the feelin I'm goin' through" },
+                    { time: 33.50, text: "I just can't say I don't love you (Yeah)" },
+                    { time: 37.60, text: "'Cause I love you, yeah" },
+                    { time: 42.60, text: "It's hard for me to communicate the thoughts that I hold" },
+                    { time: 47.20, text: "But tonight I'm gon' let you know" },
+                    { time: 49.90, text: "Let me tell the truth" },
+                    { time: 52.40, text: "Baby, let me tell the truth, yeah" },
+                    { time: 56.80, text: "You know what I'm thinkin', see it in your eyes" },
+                    { time: 60.50, text: "You hate that you want me, hate it when you cry" },
+                    { time: 64.10, text: "You're scared to be lonely, 'specially in the night" },
+                    { time: 67.60, text: "I'm scared that I'll miss you, happens every time" },
+                    { time: 71.20, text: "I don't want this feelin', I can't afford love" },
+                    { time: 74.80, text: "I try to find a reason to pull us apart" },
+                    { time: 78.40, text: "It ain't workin' 'cause you're perfect" },
+                    { time: 80.20, text: "And I know that you're worth it" },
+                    { time: 81.90, text: "I can't walk away, oh!" },
+                    { time: 86.00, text: "Even though we're going through it and it makes you feel alone" },
+                    { time: 91.90, text: "Just know that I would die for you" },
+                    { time: 95.50, text: "Baby, I would die for you, yeah" },
+                    { time: 99.40, text: "The distance and the time between us" },
+                    { time: 103.60, text: "It'll never change my mind, 'cause baby" },
+                    { time: 106.90, text: "I would die for you" },
+                    { time: 110.20, text: "Baby, I would die for you, yeah (Say)" },
+                    { time: 114.30, text: "I'm finding ways to manipulate the feelin' you're goin' through" },
+                    { time: 119.50, text: "But baby girl, I'm not blamin' you" },
+                    { time: 123.80, text: "Just don't blame me, too, yeah" },
+                    { time: 129.00, text: "'Cause I can't take this pain forever" },
+                    { time: 132.50, text: "And you won't find no one that's better" },
+                    { time: 135.80, text: "'Cause I'm right for you, babe" },
+                    { time: 138.70, text: "I think I'm right for you, babe" },
+                    { time: 142.60, text: "You know what I'm thinkin', see it in your eyes" },
+                    { time: 146.50, text: "You hate that you want me, hate it when you cry" },
+                    { time: 150.00, text: "It ain't workin' 'cause you're perfect" },
+                    { time: 151.80, text: "And I know that you're worth it" },
+                    { time: 153.90, text: "I can't walk away, oh!" },
+                    { time: 157.60, text: "Even though we're going through it" },
+                    { time: 161.00, text: "And it makes you feel alone" },
+                    { time: 163.30, text: "Just know that I would die for you" },
+                    { time: 167.60, text: "Baby, I would die for you, yeah" },
+                    { time: 171.80, text: "The distance and the time between us" },
+                    { time: 175.00, text: "It'll never change my mind, 'cause baby" },
+                    { time: 178.70, text: "I would die for you" },
+                    { time: 181.60, text: "Baby, I would die for you, yeah" },
+                    { time: 185.60, text: "I would die for you, I would lie for you" },
+                    { time: 189.40, text: "Keep it real with you, I would kill for you, my baby" },
+                    { time: 196.00, text: "I'm just sayin', yeah" },
+                    { time: 199.90, text: "I would die for you, I would lie for you" },
+                    { time: 203.80, text: "Keep it real with you, I would kill for you, my baby" },
+                    { time: 210.00, text: "Na-na-na, na-na-na, na-na-na" },
+                    { time: 214.60, text: "Even though we're going through it" },
+                    { time: 218.30, text: "And it makes you feel alone" },
+                    { time: 220.80, text: "Just know that I would die for you" },
+                    { time: 224.50, text: "Baby, I would die for you, yeah" },
+                    { time: 228.80, text: "The distance and the time between us" },
+                    { time: 232.50, text: "It'll never change my mind, 'cause baby" },
+                    { time: 236.00, text: "I would die for you" },
+                    { time: 238.40, text: "Baby, I would die for you, yeah (Oh, babe)" },
+                ]
+            },
+            {
+                title: "Heather",
+                src: "https://files.catbox.moe/i5vt2y.mp3",
+                duration: 190, // 3m 10s
+                lyrics: [
+                    { time: 0, text: "..." },
+                    { time: 24.23, text: "I still remember" },
+                    { time: 27.30, text: "Third of december" },
+                    { time: 29.47, text: "Me in your sweater" },
+                    { time: 32.03, text: "You said it looked better" },
+                    { time: 34.37, text: "On me, than it did you" },
+                    { time: 37.23, text: "Only if you knew" },
+                    { time: 40.00, text: "How much I liked you" },
+                    { time: 42.43, text: "But I watch your eyes, as she" },
+                    { time: 45.47, text: "Walks by" },
+                    { time: 47.97, text: "What a sight for" },
+                    { time: 50.73, text: "Sore eyes" },
+                    { time: 53.13, text: "Brighter than a" },
+                    { time: 56.00, text: "Blue sky" },
+                    { time: 58.33, text: "She's got you" },
+                    { time: 60.57, text: "Mesmerized" },
+                    { time: 63.43, text: "While I die" },
+                    { time: 66.13, text: "Why would you ever kiss me?" },
+                    { time: 71.00, text: "I'm not even half, as pretty" },
+                    { time: 76.13, text: "You gave her your sweater" },
+                    { time: 78.83, text: "It's just polyester, but you like her better" },
+                    { time: 84.30, text: "Wish I were heather" },
+                    { time: 87.20, text: "Watch as she stands with" },
+                    { time: 89.50, text: "Her holding your hand" },
+                    { time: 91.63, text: "Put your arm 'round her shoulder" },
+                    { time: 94.03, text: "Now I'm getting colder" },
+                    { time: 97.13, text: "But how could I hate her?" },
+                    { time: 99.30, text: "She's such an angel" },
+                    { time: 102.37, text: "But then again, kinda" },
+                    { time: 105.23, text: "Wish she were dead, as she" },
+                    { time: 108.07, text: "Walks by" },
+                    { time: 110.43, text: "What a sight for" },
+                    { time: 113.23, text: "Sore eyes" },
+                    { time: 115.87, text: "Brighter than a" },
+                    { time: 118.70, text: "Blue sky" },
+                    { time: 121.03, text: "She's got you" },
+                    { time: 123.47, text: "Mesmerized" },
+                    { time: 126.07, text: "While I die" },
+                    { time: 128.70, text: "Why would you ever kiss me?" },
+                    { time: 134.10, text: "I'm not even half, as pretty" },
+                    { time: 138.77, text: "You gave her your sweater" },
+                    { time: 141.53, text: "It's just polyester, but you like her better" },
+                    { time: 146.93, text: "I wish I were heather" },
+                    { time: 149.615, text: "♪..." },
+                    { time: 152.300, text: "♪..." },
+                    { time: 154.985, text: "♪..." },
+                    { time: 157.67, text: "Wish I were heather" },
+                    { time: 160.185, text: "♪..." },
+                    { time: 162.700, text: "♪..." },
+                    { time: 165.215, text: "♪..." },
+                    { time: 167.73, text: "Wish I were heather" },
+                    { time: 170.67, text: "Why would you ever kiss me?" },
+                    { time: 175.47, text: "I'm not even half as pretty" },
+                    { time: 180.67, text: "You gave her your sweater" },
+                    { time: 183.57, text: "It's just polyester, but you like her better" },
+                    { time: 189.10, text: "Wish I were" },
+                    { time: 190.10, text: "♪..." },
+                ]
+            },
+        ];
+        
+        let currentActiveLyricId = null;
+        let musicUnlocked = false; // Music can't play until user clicks
+
+        // --- NEW: Song & Lyric Functions ---
+        // ... (existing song functions, no changes) ...
+        
+        /**
+         * Loads a selected song AND plays it.
+         * @param {number} songIndex - The index of the song to play.
+         */
+        function loadSong(songIndex) {
+            // Stop animation and clear old lyrics
+            lyricsScroller.classList.remove('animate-scroll-lyrics');
+            lyricsContent.innerHTML = "";
+            
+            // Get the new song data
+            currentSongIndex = songIndex;
+            const song = songs[currentSongIndex];
+            
+            // 1. Build the new HTML for the lyrics
+            let lyricsHTML = '';
+            song.lyrics.forEach((line, index) => {
+                const text = (line.text === "" || line.text === "...") ? "&nbsp;" : line.text;
+                lyricsHTML += `<p id="lyric-${index}" class="lyric-line">${text}</p>\n`;
+            });
+            lyricsContent.innerHTML = lyricsHTML;
+            
+            // 2. Set the new lyric timestamps
+            currentLyricTimestamps = song.lyrics.map((line, index) => ({
+                time: line.time,
+                id: `lyric-${index}`
+            }));
+            
+            // 3. Set the new audio source and load it
+            musicSource.src = song.src;
+            music.load();
+            
+            // 4. (FIXED) Set animation and restart it
+            // This forces the browser to "reflow" and restart the animation
+            lyricsScroller.style.animationDuration = song.duration + 's';
+            // Force a DOM reflow to restart the animation
+            lyricsScroller.classList.remove('animate-scroll-lyrics');
+            void lyricsScroller.offsetWidth; // This is the trick
+            lyricsScroller.classList.add('animate-scroll-lyrics');
+            
+            // 5. (FIXED) Always try to play the music when a song is loaded.
+            tryPlayMusic();
+        }
+
+        /**
+         * Plays the next song in the playlist. Loops to the beginning if at the end.
+         */
+        function playNextSong() {
+            let nextIndex = currentSongIndex + 1;
+            if (nextIndex >= songs.length) {
+                nextIndex = 0; // Loop back to the first song
+            }
+            loadSong(nextIndex); // This will load AND play
+        }
+
+        /**
+         * Highlights the currently playing lyric line.
+         */
+        function updateLyricHighlight() {
+            if (!currentLyricTimestamps || currentLyricTimestamps.length === 0) return;
+
+            const currentTime = music.currentTime;
+            let newActiveLyricId = null;
+
+            // Find the current lyric ID
+            for (let i = 0; i < currentLyricTimestamps.length; i++) {
+                if (currentTime >= currentLyricTimestamps[i].time) {
+                    if (i === currentLyricTimestamps.length - 1 || currentTime < currentLyricTimestamps[i+1].time) {
+                        newActiveLyricId = currentLyricTimestamps[i].id;
+                    }
+                }
+            }
+
+            // Check if the active lyric has changed
+            if (newActiveLyricId !== currentActiveLyricId) {
+                if (currentActiveLyricId) {
+                    const oldLine = document.getElementById(currentActiveLyricId);
+                    if (oldLine) oldLine.classList.remove('active');
+                }
+                
+                if (newActiveLyricId) {
+                    const newLine = document.getElementById(newActiveLyricId);
+                    if (newLine) newLine.classList.add('active');
+                }
+                
+                currentActiveLyricId = newActiveLyricId;
+            }
+        }
+
+
+        // Function to try and play the background music
+        function tryPlayMusic() {
+            if (musicSource.src && music.paused) {
+                const playPromise = music.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(_ => {
+                        console.log("Music started playing.");
+                        musicUnlocked = true; // Mark music as officially playing
+                    }).catch(error => {
+                        console.log("Autoplay prevented. Manual click needed.");
+                        playMusicButton.classList.remove('hidden'); // Show button if autoplay fails
+                    });
+                }
+            } else if (!music.paused) {
+                hidePlayButton();
+            }
+        }
+        
+        // Function for the manual play button
+        function manualPlayMusic() {
+            if (music.paused) {
+                console.log("Manual play button clicked.");
+                music.play().catch(error => console.log("Manual play failed:", error));
+            }
+            hidePlayButton();
+        }
+        
+        // Function to hide the play button
+        function hidePlayButton() {
+            if (playMusicButton) {
+                playMusicButton.classList.add('hidden');
+            }
+        }
+        
+        
+        // Function to log audio errors to the console for debugging
+        function logAudioError() {
+            if (music.error) {
+                console.error("Audio Error Code:", music.error.code);
+                console.error("Audio Error Message:", music.error.message);
+                console.error("Error loading the music file. Please ensure the .mp3 link is correct and direct.");
+            }
+        }
+
+        // --- Page Navigation Functions ---
+        
+        function showLoginPage() {
+            pageCountdown.classList.add('hidden');
+            pageLogin.classList.remove('hidden');
+        }
+        
+        function showMainPage() {
+            pageLogin.classList.add('hidden');
+            pageMain.classList.remove('hidden');
+            // Music is already loaded and playing from the first click, so we do nothing here.
+        }
+        
+        // --- NEW: Message Page Navigation Functions ---
+
+        /**
+         * Shows a specific message page and hides the main page.
+         * @param {number} messageNumber - The number of the message (1-10) to show.
+         */
+        function showMessage(messageNumber) {
+            // Hide main page
+            if (pageMain) pageMain.classList.add('hidden');
+            
+            // Hide all message pages first
+            allMessagePages.forEach(page => {
+                if (page) page.classList.add('hidden');
+            });
+            
+            // Show the specific one (adjust for 0-based array index)
+            const pageToShow = allMessagePages[messageNumber - 1];
+            if (pageToShow) {
+                pageToShow.classList.remove('hidden');
+            } else {
+                console.warn("Could not find message page number:", messageNumber);
+            }
+            
+            // Scroll to top
+            try { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0,0); }
+        }
+
+        /**
+         * Hides all message pages and shows the main page.
+         */
+        function hideMessage() {
+            // Hide all message pages
+            allMessagePages.forEach(page => {
+                if (page) page.classList.add('hidden');
+            });
+            
+            // Show main page
+            if (pageMain) pageMain.classList.remove('hidden');
+            
+            // Scroll to top
+            try { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0,0); }
+        }
+
+        // --- Cake Cutting Functions ---
+        
+        function startCakeCutting() {
+            pageMain.classList.add('hidden');
+            pageCake.classList.remove('hidden');
+            // ... (rest of function is unchanged) ...
+      try { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0,0); }
+      try {
+        const candleContainer = document.querySelector('#cake-container .candle-container');
+        const flameWrap = document.querySelector('#cake-container .flame-wrap');
+        const stars = document.querySelectorAll('#cake-container .star');
+
+        if (candleContainer) candleContainer.classList.add('lit');
+        if (flameWrap) flameWrap.classList.add('lit');
+        if (stars && stars.length) stars.forEach(s => s.classList.add('lit'));
+      } catch (e) {
+        console.warn('Could not auto-light cake visuals:', e);
+      }
+        }
+        
+        function goBackToMain() {
+            // ... (existing goBackToMain function, no changes) ...
+      console.log('goBackToMain called', { pageMainExists: !!pageMain, pageCakeExists: !!pageCake });
+      try {
+        pageCake.classList.add('hidden');
+      } catch (e) { console.warn('Could not hide pageCake', e); }
+            pageMain.classList.remove('hidden');
+            try { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0,0); }
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            blowDetected = false;
+            
+            document.getElementById('mic-start-button').style.display = 'block';
+            document.getElementById('mic-status-text').textContent = 'Click "Start" to enable microphone';
+            
+            const flameWrap = document.querySelector('#cake-container .flame-wrap');
+            const stars = document.querySelectorAll('#cake-container .star');
+            const candleContainer = document.querySelector('#cake-container .candle-container');
+            
+            if (flameWrap) flameWrap.classList.remove('lit', 'extinguished');
+            if (candleContainer) candleContainer.classList.remove('lit');
+            stars.forEach(star => star.classList.remove('lit', 'extinguished'));
+        }
+        
+        // ... (existing cake functions: initCakePage, detectBlow, blowOutCandles) ...
+        
+        async function initCakePage() {
+            // ... (existing initCakePage function, no changes) ...
+            const candleContainer = document.querySelector('#cake-container .candle-container');
+            const flameWrap = document.querySelector('#cake-container .flame-wrap');
+            const stars = document.querySelectorAll('#cake-container .star');
+
+            if (candleContainer) candleContainer.classList.add('lit');
+            if (flameWrap) flameWrap.classList.add('lit');
+            stars.forEach(star => star.classList.add('lit'));
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: false,
+                        autoGainControl: false,
+                        noiseSuppression: false
+                    } 
+                });
+                
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                
+                analyser.fftSize = 256;
+                analyser.smoothingTimeConstant = 0.3;
+                microphone.connect(analyser);
+                
+                document.getElementById('mic-start-button').style.display = 'none';
+                document.getElementById('mic-status-text').textContent = '✅ Microphone ready! Blow into it now!';
+                document.getElementById('blow-instructions').classList.remove('hidden');
+                
+                detectBlow();
+        try {
+          if (!musicSource.src || musicSource.src.trim() === '') {
+            loadSong(0);
+          }
+          tryPlayMusic();
+        } catch (e) {
+          console.warn('Auto-play attempt failed (will rely on manual play button):', e);
+        }
+                
+            } catch (error) {
+                document.getElementById('mic-status-text').textContent = '❌ Microphone access denied. Please allow microphone access.';
+                console.error('Microphone access error:', error);
+                
+                if (candleContainer) candleContainer.classList.remove('lit');
+                if (flameWrap) flameWrap.classList.remove('lit');
+                stars.forEach(star => star.classList.remove('lit'));
+            }
+        }
+        
+        function detectBlow() {
+            // ... (existing detectBlow function, no changes) ...
+            if (!analyser) return;
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            function checkBlow() {
+                if (blowDetected) return; // Stop checking if already blown
+                
+                analyser.getByteFrequencyData(dataArray);
+                
+                let sum = 0;
+                for (let i = 0; i < bufferLength; i++) {
+                    sum += dataArray[i];
+                }
+                const average = sum / bufferLength;
+                
+                const lowFreqSum = dataArray.slice(0, 30).reduce((a, b) => a + b, 0);
+                
+                if (average > 60 && lowFreqSum > 300 && !blowDetected) {
+                    blowDetected = true;
+                    blowOutCandles();
+                }
+                
+                requestAnimationFrame(checkBlow);
+            }
+            
+            checkBlow();
+        }
+        
+        function blowOutCandles() {
+            // ... (existing blowOutCandles function, no changes) ...
+            console.log("Blow detected! Extinguishing flame.");
+            
+            const flameWrap = document.querySelector('#cake-container .flame-wrap');
+            const stars = document.querySelectorAll('#cake-container .star');
+
+            if (flameWrap) {
+                flameWrap.classList.remove('lit'); // Stop flicker
+                flameWrap.classList.add('extinguished');
+            }
+            stars.forEach(star => {
+                star.classList.remove('lit'); // Stop float
+                star.classList.add('extinguished');
+            });
+
+      try { startFireworks(); } catch (e) { console.warn('startFireworks failed:', e); }
+
+            setTimeout(() => {
+                const statusText = document.getElementById('mic-status-text');
+                statusText.innerHTML = '🎉🎂 Happy Birthday! Your wish is coming true! 🎂🎉';
+                statusText.className = 'text-2xl text-pink-600 font-bold';
+                
+                document.getElementById('blow-instructions').classList.add('hidden');
+            }, 1000); // 1 second after blow
+
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        }
+
+    /* Fireworks canvas JavaScript
+       ... (existing fireworks JS, no changes) ...
+    */
+    (function(){
+      const canvas = document.getElementById('fireworksCanvas');
+      if (!canvas) return; // bail if canvas is missing
+
+  const ctx = canvas.getContext('2d');
+  ctx.globalCompositeOperation = 'lighter';
+      let fireworks = [];
+      let particles = [];
+      let autoInterval = null;
+      let animFrame = null;
+
+      function resizeFireworksCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resizeFireworksCanvas);
+      resizeFireworksCanvas();
+
+      class Firework {
+        constructor(x, targetY) {
+          this.x = x;
+          this.y = canvas.height;
+          this.targetY = targetY;
+          this.hue = Math.random() * 360;
+          this.brightness = 50 + Math.random() * 50;
+          this.element = { x: this.x, y: this.y };
+          this.animate();
+        }
+
+        animate() {
+          gsap.to(this.element, {
+            y: this.targetY,
+            duration: 1.4 + Math.random() * 0.8,
+            ease: 'power2.out',
+            onUpdate: () => {
+              this.y = this.element.y;
+            },
+            onComplete: () => {
+              explode(this.x, this.y, this.hue);
+              fireworks = fireworks.filter(f => f !== this);
+            }
+          });
+        }
+
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+          ctx.fillStyle = `hsl(${this.hue}, 100%, ${this.brightness}%)`;
+          ctx.fill();
+        }
+      }
+
+  class FwParticle {
+        constructor(x, y, hue) {
+          this.x = x;
+          this.y = y;
+          this.hue = hue;
+          this.brightness = 65 + Math.random() * 35;
+          this.angle = Math.random() * Math.PI * 2;
+          this.speed = 2 + Math.random() * 5;
+          this.gravity = 0.2 + Math.random() * 0.6;
+          this.opacity = 1;
+          this.radius = 2 + Math.random() * 3; // slightly larger particles for more visible glow
+          this.element = { x: this.x, y: this.y, opacity: this.opacity };
+          this.animate();
+        }
+
+        animate() {
+          const targetX = this.x + Math.cos(this.angle) * this.speed * 60;
+          const targetY = this.y + Math.sin(this.angle) * this.speed * 60 + this.gravity * 50;
+          gsap.to(this.element, {
+            x: targetX,
+            y: targetY,
+            opacity: 0,
+            duration: 0.9 + Math.random() * 0.7,
+            ease: 'power1.out',
+            onUpdate: () => {
+              this.x = this.element.x;
+              this.y = this.element.y;
+              this.opacity = this.element.opacity;
+            },
+            onComplete: () => {
+              particles = particles.filter(p => p !== this);
+            }
+          });
+        }
+
+        draw() {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, this.opacity);
+          const r = this.radius;
+          const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, r * 3);
+          g.addColorStop(0, `hsla(${this.hue}, 100%, ${this.brightness}%, ${Math.min(1, this.opacity)})`);
+          g.addColorStop(0.3, `hsla(${this.hue}, 100%, ${this.brightness}%, ${Math.min(0.7, this.opacity * 0.8)})`);
+          g.addColorStop(1, `hsla(${this.hue}, 100%, ${this.brightness}%, 0)`);
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, r * 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      function createFirework(x, y) {
+        fireworks.push(new Firework(x, y));
+      }
+
+      function explode(x, y, hue) {
+        const count = 80 + Math.floor(Math.random() * 60);
+        for (let i = 0; i < count; i++) {
+          particles.push(new FwParticle(x, y, hue));
+        }
+      }
+
+      function animateFireworks() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (const f of fireworks) {
+          f.draw();
+        }
+
+        for (const p of particles) {
+          p.draw();
+        }
+
+        animFrame = requestAnimationFrame(animateFireworks);
+      }
+
+      function startAutoFireworks(interval = 600) {
+        if (autoInterval) clearInterval(autoInterval);
+        autoInterval = setInterval(() => {
+          createFirework(
+            Math.random() * canvas.width,
+            Math.random() * canvas.height * 0.5
+          );
+        }, interval);
+      }
+
+      function stopAutoFireworks() {
+        if (autoInterval) { clearInterval(autoInterval); autoInterval = null; }
+      }
+
+      window.startFireworks = function(durationMs) {
+        resizeFireworksCanvas();
+        if (!animFrame) animateFireworks();
+
+        for (let i = 0; i < 3; i++) {
+          createFirework(Math.random() * canvas.width, Math.random() * canvas.height * 0.5);
+        }
+
+        startAutoFireworks(420);
+        if (typeof durationMs === 'number' && durationMs > 0) {
+          setTimeout(() => {
+            stopAutoFireworks();
+            setTimeout(() => {
+              cancelAnimationFrame(animFrame);
+              animFrame = null;
+              fireworks = [];
+              particles = [];
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }, 1500);
+          }, durationMs);
+        }
+      };
+      window.stopFireworks = function() {
+        stopAutoFireworks();
+        if (animFrame) {
+          cancelAnimationFrame(animFrame);
+          animFrame = null;
+        }
+        fireworks = [];
+        particles = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      };
+    })();
+        
+        // --- Password Check Logic ---
+        
+        function checkPassword() {
+            // ... (existing checkPassword function, no changes) ...
+            const input = document.getElementById('password-input');
+            const errorMessage = document.getElementById('error-message');
+            const loginCard = document.getElementById('login-card');
+            
+            if (input.value === secretPassword) {
+                errorMessage.innerHTML = "";
+                showMainPage();
+            } else {
+                errorMessage.innerHTML = 'any special date i guess ?... <span class="font-emoji">🤔</span>';
+                loginCard.classList.add('animate-shake');
+                setTimeout(() => {
+                    loginCard.classList.remove('animate-shake');
+                }, 500);
+            }
+        }
+
+        // --- Try to play music on the VERY first click anywhere (FIXED) ---
+        function handleFirstClick() {
+            // ... (existing handleFirstClick function, no changes) ...
+            if (!musicUnlocked) { // Only run this once
+                console.log("First click detected. Loading and playing song 0.");
+                loadSong(0); // This will now load AND play
+                musicUnlocked = true; // Mark as unlocked
+            }
+            
+            // Remove the listeners so this doesn't fire on every click
+            document.removeEventListener('click', handleFirstClick);
+            document.removeEventListener('touchstart', handleFirstClick);
+        }
+        
+
+        // Run this script after the HTML document has fully loaded
+        document.addEventListener('DOMContentLoaded', (event) => {
+        
+            /* --- START: FAIRY DUST CURSOR JS (Added from your instructions) --- */
+            
+            // You can customize these emojis!
+            const emojis = ['❤️', '🌸', '💖', '✨', '⭐'];
+            let canCreateParticle = true; // Throttle flag
+
+            // --- 1. Create and add the main cursor dot ---
+            // This script creates the dot so you don't need to add it to your HTML
+            const cursorDot = document.createElement('div');
+            cursorDot.id = 'cursor-dot';
+            document.body.appendChild(cursorDot);
+
+            // --- 2. Function to create a particle ---
+            function createParticle(x, y) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // Set start position at the cursor
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+
+                // Pick a random emoji
+                particle.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+
+                // --- Set random end-position for the animation ---
+                
+                // Random horizontal drift (-75px to +75px)
+                const endX = (Math.random() - 0.5) * 150;
+                // Random upward drift (-100px to -50px)
+                const endY = -Math.random() * 100 - 50;
+
+                // Set CSS variables for the @keyframes animation
+                particle.style.setProperty('--x', `${endX}px`);
+                particle.style.setProperty('--y', `${endY}px`);
+
+                // Add particle to the page
+                document.body.appendChild(particle);
+
+                // Remove the particle from the DOM after 1s (when animation finishes)
+                setTimeout(() => {
+                    particle.remove();
+                }, 1000);
+            }
+
+            // --- 3. MouseMove Listener ---
+            window.addEventListener('mousemove', (e) => {
+                const { clientX, clientY } = e;
+
+                // Update the main cursor dot's position immediately
+                // The (-4px) is to perfectly center the 8px dot.
+                cursorDot.style.transform = `translate(${clientX - 4}px, ${clientY - 4}px)`;
+
+                // Create particles on a throttle
+                if (canCreateParticle) {
+                    canCreateParticle = false; // Set flag
+                    createParticle(clientX, clientY);
+                    
+                    // Set a timeout to allow creating a new particle after 30ms
+                    setTimeout(() => {
+                        canCreateParticle = true; // Reset flag
+                    }, 30); 
+                }
+            });
+
+            /* --- END: FAIRY DUST CURSOR JS --- */
+
+
+            // Assign DOM elements to the global variables
+            pageCountdown = document.getElementById('page-countdown');
+            pageLogin = document.getElementById('page-login');
+            pageMain = document.getElementById('page-main');
+            pageCake = document.getElementById('page-cake');
+            
+            // NEW: Assign all message pages
+            pageMessage1 = document.getElementById('page-message-1');
+            pageMessage2 = document.getElementById('page-message-2');
+            pageMessage3 = document.getElementById('page-message-3');
+            pageMessage4 = document.getElementById('page-message-4');
+            pageMessage5 = document.getElementById('page-message-5');
+            pageMessage6 = document.getElementById('page-message-6');
+            pageMessage7 = document.getElementById('page-message-7');
+            pageMessage8 = document.getElementById('page-message-8');
+            pageMessage9 = document.getElementById('page-message-9');
+            pageMessage10 = document.getElementById('page-message-10');
+            
+            // NEW: Populate the array for easier management
+            allMessagePages = [
+                pageMessage1, pageMessage2, pageMessage3, pageMessage4, pageMessage5,
+                pageMessage6, pageMessage7, pageMessage8, pageMessage9, pageMessage10
+            ];
+            
+            timerDays = document.getElementById('timer-days');
+            // ... (rest of existing assignments) ...
+            timerHours = document.getElementById('timer-hours');
+            timerMinutes = document.getElementById('timer-minutes');
+            timerSeconds = document.getElementById('timer-seconds');
+            timerMessage = document.getElementById('timer-message');
+            countdownButton = document.getElementById('countdown-button');
+            playMusicButton = document.getElementById('play-music-button');
+            
+            music = document.getElementById('bg-music');
+            // ... (rest of existing assignments) ...
+            musicSource = document.getElementById('music-source');
+            try { music.crossOrigin = 'anonymous'; } catch (e) {}
+            music.preload = 'auto';
+            music.volume = 0.95;
+            music.muted = false;
+            lyricsScroller = document.getElementById('lyrics-scroller');
+            lyricsContent = document.getElementById('lyrics-content');
+      try {
+        console.log('DOMContentLoaded: pageMain=', pageMain, 'pageCake=', pageCake);
+      } catch (e) { console.warn('Error logging page refs', e); }
+            
+            
+            // --- Countdown Timer Logic (BYPASSED) ---
+            // ... (existing countdown logic, no changes) ...
+            countdownButton.disabled = false;
+            countdownButton.innerHTML = "Continue (Bypassed)";
+            timerMessage.innerHTML = "Countdown bypassed for editing.";
+
+            /* --- UNCOMMENT TO RE-ENABLE TIMER ---
+            ... (existing timer comment, no changes) ...
+            --- END UNCOMMENT --- */
+
+            // Add event listener to password input for "Enter" key
+            // ... (existing password listener, no changes) ...
+            document.getElementById('password-input').addEventListener('keyup', function(event) {
+                if (event.key === "Enter") {
+                    checkPassword();
+                }
+            });
+            
+            // Add listeners for both mouse clicks and screen taps (FIXED)
+            // ... (existing click listeners, no changes) ...
+            document.addEventListener('click', handleFirstClick);
+            document.addEventListener('touchstart', handleFirstClick);
+        
+        }); // End of DOMContentLoaded listener
+    </script>
+
+</body>
+</html>
